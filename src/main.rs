@@ -27,12 +27,12 @@ fn pprint_huffman(node: &HuffNode) {
 }
 
 fn main() {
-    let input = thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(1000)
-        .map(char::from)
-        .collect();
-    // let input = std::fs::read_to_string("file.txt").expect("something went wrong");
+    // let input = thread_rng()
+    //     .sample_iter(&Alphanumeric)
+    //     .take(1000)
+    //     .map(char::from)
+    //     .collect();
+    let input = std::fs::read_to_string("file.txt").expect("something went wrong");
     let mut now = Instant::now();
     // for _i in 0..1000 {
     let mut huffman = make_start_count_huffman(&input);
