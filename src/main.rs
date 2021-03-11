@@ -1,47 +1,158 @@
+use crate::types::{CharCount, HuffNode, Huffman};
+use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng};
 use std::string::String;
+use std::time::Instant;
+use std::{borrow::Borrow, collections::HashMap};
 
-// struct letters {
-//     a: i32,
-//     b: i32,
-//     c: i32,
-//     d: i32,
-//     e: i32,
-//     f: i32,
-//     g: i32,
-//     h: i32,
-//     i: i32,
-//     j: i32,
-//     k: i32,
-//     l: i32,
-//     m: i32,
-//     n: i32,
-//     o: i32,
-//     p: i32,
-//     q: i32,
-//     r: i32,
-//     s: i32,
-//     t: i32,
-//     u: i32,
-//     v: i32,
-//     w: i32,
-//     x: i32,
-//     y: i32,
-//     z: i32,
-// }
+pub mod types {
+    use std::fmt;
+    #[derive(Debug)]
+    pub struct Huffman {
+        pub count: i32,
+        pub children: Vec<HuffNode>,
+    }
+    #[derive(Debug)]
+    pub struct CharCount {
+        pub count: i32,
+        pub character: char,
+    }
+
+    impl Clone for CharCount {
+        fn clone(&self) -> Self {
+            CharCount {
+                count: self.count,
+                character: self.character,
+            }
+        }
+    }
+    #[derive(Debug)]
+    pub enum HuffNode {
+        Huff(Huffman),
+        CharCount(CharCount),
+    }
+
+    impl Eq for HuffNode {}
+
+    impl HuffNode {
+        pub fn count(&self) -> i32 {
+            match self {
+                HuffNode::Huff(huffman) => huffman.count,
+                HuffNode::CharCount(charcount) => charcount.count,
+            }
+        }
+    }
+    impl PartialOrd for HuffNode {
+        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    impl PartialEq for HuffNode {
+        fn eq(&self, other: &Self) -> bool {
+            self.count() == other.count()
+        }
+    }
+
+    impl Ord for HuffNode {
+        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+            self.count().cmp(&other.count())
+        }
+    }
+
+    impl fmt::Display for Huffman {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{}", self.count)
+        }
+    }
+    impl fmt::Display for HuffNode {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            match self {
+                Self::CharCount(charcount) => write!(f, "{}", charcount),
+                Self::Huff(huffman) => write!(f, "{}", huffman),
+            }
+        }
+    }
+    impl fmt::Display for CharCount {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{}: {}", self.count, self.character)
+        }
+    }
+}
+
+fn pprint_huffman(node: &HuffNode) {
+    fn pprint_huffman(node: &HuffNode, prefix: String, last: bool) {
+        let prefix_current = if last { "'- " } else { "|- " };
+        println!("{}{}{}", prefix, prefix_current, node);
+        let prefix_child = if last { "   " } else { "|   " };
+        let prefix = prefix + prefix_child;
+        match node {
+            HuffNode::Huff(huffman) => {
+                let last_child = huffman.children.len() - 1;
+                for (i, child) in huffman.children.iter().enumerate() {
+                    pprint_huffman(&child, prefix.to_string(), i == last_child);
+                }
+            }
+            _ => (),
+        };
+    }
+    pprint_huffman(node, "".to_string(), true);
+}
 
 fn main() {
-    let input = "mattias".to_string();
+    // let input = thread_rng()
+    //     .sample_iter(&Alphanumeric)
+    //     .take(10000)
+    //     .map(char::from)
+    //     .collect();
+    let input = std::fs::read_to_string("file.txt").expect("something went wrong");
+    let mut now = Instant::now();
+    // for _i in 0..1000 {
     let mut huffman = make_start_count_huffman(&input);
-    println!("{:?}", huffman);
-    let result = make_tree(&mut huffman);
-    println!("{:?}", *result);
+    // println!("{:?}", huffman);
+    let mut _result = make_tree(&mut huffman);
+    // }
+    println!("{:?}", now.elapsed());
+    pprint_huffman(&HuffNode::Huff(huffman));
+    now = Instant::now();
+    // println!("{:?}", *result);
+    // for _i in 0..1000 {
+    let mut huffman = make_start_count_huffman_with_hash_map(&input);
+    let mut _result = make_tree(&mut huffman);
+    // }
+    println!("{:?}", now.elapsed());
+    pprint_huffman(&HuffNode::Huff(huffman));
+}
+
+fn make_start_count_huffman_with_hash_map(string: &String) -> Huffman {
+    let input_array = string.chars();
+    let mut letters_map: HashMap<char, i32> = HashMap::new();
+    for i in input_array {
+        match letters_map.get(&i) {
+            Some(count) => letters_map.insert(i, *count + 1),
+            None => letters_map.insert(i, 1),
+        };
+    }
+    let mut letters: Vec<HuffNode> = Vec::new();
+    let mut total = 0;
+    for (character, count) in letters_map.iter() {
+        total += count;
+        letters.push(HuffNode::CharCount(CharCount {
+            count: *count,
+            character: *character,
+        }));
+    }
+    Huffman {
+        count: total,
+        children: letters,
+    }
 }
 
 fn make_start_count_huffman(string: &String) -> Huffman {
     let input_array = string.chars();
     let mut letters: Vec<CharCount> = Vec::new();
     for i in input_array.clone() {
-        println!("{:?}", i);
+        // println!("{:?}", i);
         increment_char(&mut letters, i);
     }
     let mut total: i32 = 0;
@@ -75,70 +186,57 @@ fn increment_char(char_count_vec: &mut Vec<CharCount>, k: char) -> &mut Vec<Char
     });
     &mut *char_count_vec
 }
-#[derive(Debug)]
-struct Huffman {
-    count: i32,
-    children: Vec<HuffNode>,
-}
-#[derive(Debug)]
-struct CharCount {
-    count: i32,
-    character: char,
-}
-
-impl Clone for CharCount {
-    fn clone(&self) -> Self {
-        CharCount {
-            count: self.count,
-            character: self.character,
-        }
-    }
-}
-#[derive(Debug)]
-enum HuffNode {
-    Huff(Huffman),
-    CharCount(CharCount),
-}
-
-impl Eq for HuffNode {}
-
-impl HuffNode {
-    fn count(&self) -> i32 {
-        match self {
-            HuffNode::Huff(huffman) => huffman.count,
-            HuffNode::CharCount(charcount) => charcount.count,
-        }
-    }
-}
-impl PartialOrd for HuffNode {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for HuffNode {
-    fn eq(&self, other: &Self) -> bool {
-        self.count() == other.count()
-    }
-}
-
-impl Ord for HuffNode {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.count().cmp(&other.count())
-    }
-}
 
 fn make_tree(input_tree: &mut Huffman) -> &Huffman {
     if input_tree.children.len() > 2 {
         input_tree.children.sort();
+        // println!("make_tree partial tree: {:?}\n", *input_tree);
         let smallest = input_tree.children.remove(0);
         let second_smallest = input_tree.children.remove(0);
-        input_tree.children[0] = HuffNode::Huff(Huffman {
+        input_tree.children.push(HuffNode::Huff(Huffman {
             count: smallest.count() + second_smallest.count(),
             children: vec![smallest, second_smallest],
-        });
+        }));
         make_tree(&mut *input_tree)
     } else {
         input_tree
     }
 }
+
+// Huffman { count: 70, children: [
+//     Huff(Huffman { count: 29, children: [
+//         CharCount(CharCount { count: 14, character: 'a' }),
+//         Huff(Huffman { count: 15, children: [
+//             Huff(Huffman { count: 7, children: [
+//                 Huff(Huffman { count: 3, children: [
+//                     CharCount(CharCount { count: 1, character: 'p' }),
+//                     CharCount(CharCount { count: 2, character: 'i' })] }),
+//                 CharCount(CharCount { count: 4, character: 'h' })] }),
+//             CharCount(CharCount { count: 8, character: 'o' })] })] }),
+//     Huff(Huffman { count: 41, children: [
+//         Huff(Huffman { count: 16, children: [
+//             Huff(Huffman { count: 8, children: [
+//                 CharCount(CharCount { count: 4, character: 'e' }),
+//                 Huff(Huffman { count: 4, children: [
+//                     CharCount(CharCount { count: 2, character: 's' }),
+//                     CharCount(CharCount { count: 2, character: 'y' })] })] }),
+//             Huff(Huffman { count: 8, children: [
+//                 Huff(Huffman { count: 4, children: [
+//                     CharCount(CharCount { count: 2, character: 'u' }),
+//                     Huff(Huffman { count: 2, children: [
+//                         CharCount(CharCount { count: 1, character: 'm' }),
+//                         CharCount(CharCount { count: 1, character: 'w' })] })] }),
+//                 Huff(Huffman { count: 4, children: [
+//                     Huff(Huffman { count: 2, children: [
+//                         CharCount(CharCount { count: 1, character: 'r' }),
+//                         CharCount(CharCount { count: 1, character: 'n' })] }),
+//                     Huff(Huffman { count: 2, children: [
+//                         CharCount(CharCount { count: 1, character: 'g' }),
+//                         CharCount(CharCount { count: 1, character: 'b' })] })] })] })] }),
+//     Huff(Huffman { count: 25, children: [
+//         Huff(Huffman { count: 12, children: [
+//             CharCount(CharCount { count: 6, character: 't' }),
+//             Huff(Huffman { count: 6, children: [
+//                 CharCount(CharCount { count: 3, character: 'l' }),
+//                 CharCount(CharCount { count: 3, character: 'd' })] })] }),
+//         CharCount(CharCount { count: 13, character: ' ' })] })] })] }
