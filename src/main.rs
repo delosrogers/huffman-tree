@@ -1,31 +1,32 @@
+#[macro_use]
+extern crate partial_application;
 mod encode;
 mod tree;
 mod types;
 use crate::tree::{make_start_count_huffman_with_hash_map, make_tree};
-use crate::types::{HuffNode, Huffman};
+use crate::types::{Arena, Huffman};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use std::string::String;
 use std::time::Instant;
 
-fn pprint_huffman(tree: Box<Huffman>) {
-    fn pprint_huffman(node: &HuffNode, prefix: String, last: bool) {
+fn pprint_huffman(tree: &Huffman, arena: &Arena) {
+    fn _pprint_huffman(node: &Huffman, prefix: String, last: bool, arena: &Arena) {
         let prefix_current = if last { "'- " } else { "|- " };
         println!("{}{}{}", prefix, prefix_current, node);
         let prefix_child = if last { "   " } else { "|   " };
         let prefix = prefix + prefix_child;
-        match node {
-            HuffNode::Huff(huffman) => {
-                let last_child = huffman.children.len() - 1;
-                for (i, child) in huffman.children.iter().enumerate() {
-                    pprint_huffman(&child, prefix.to_string(), i == last_child);
+        match node.children.clone() {
+            Some(children) => {
+                let last_child = children.len() - 1;
+                for (i, child) in children.iter().enumerate() {
+                    _pprint_huffman(&arena[*child], prefix.to_string(), i == last_child, arena);
                 }
             }
             _ => (),
         };
     }
-
-    pprint_huffman(&HuffNode::Huff(*tree), "".to_string(), true);
+    _pprint_huffman(tree, "".to_string(), false, arena)
 }
 
 fn main() {
@@ -46,9 +47,11 @@ fn main() {
     let now = Instant::now();
     // println!("{:?}", *result);
     // for _i in 0..1000 {
-    let mut huffman = make_start_count_huffman_with_hash_map(&input);
-    let mut _result = make_tree(huffman);
+    let mut start_state = make_start_count_huffman_with_hash_map(&input);
+    let mut huffman = start_state.0;
+    let mut arena: Arena = start_state.1;
+    let mut _result = make_tree(huffman, &mut arena);
     // }
     println!("{:?}", now.elapsed());
-    pprint_huffman(huffman);
+    pprint_huffman(&arena[huffman], &arena);
 }
