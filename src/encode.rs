@@ -10,16 +10,16 @@ pub fn encode(input: &String, tree: &Huffman) -> String {
 
 fn get_path_from_char<'a>(tree: &'a Huffman, char_map: HashMap<char, &'a HuffNode>) {}
 
-fn build_char_map<'a>(tree: &'a Huffman) -> HashMap<char, Box<HuffNode>> {
+fn build_char_map<'a>(tree: &'a Huffman) -> HashMap<char, &'a HuffNode> {
     let mut char_map = HashMap::new();
     fn _build_char_map<'a>(tree: &'a Huffman, char_map: &mut HashMap<char, Box<HuffNode>>) {
-        for child in tree.children.clone().iter() {
-            match **child {
+        for child in tree.children.iter() {
+            match child {
                 HuffNode::Huff(huffman) => {
                     _build_char_map(&huffman, char_map);
-                }
+                },
                 HuffNode::CharCount(charcount) => {
-                    char_map.insert(charcount.character, *child);
+                    char_map.insert(charcount.character, child);
                 }
             };
         

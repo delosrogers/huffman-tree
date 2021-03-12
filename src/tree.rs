@@ -2,7 +2,7 @@ use crate::types::{CharCount, HuffNode, Huffman};
 use std::{borrow::Borrow, collections::HashMap};
 /// Makes a non valid Huffman tree that contains the counts of every
 /// character
-pub fn make_start_count_huffman_with_hash_map(string: &String) -> Box<Huffman> {
+pub fn make_start_count_huffman_with_hash_map(string: &String) -> Huffman {
     let input_array = string.chars();
     let mut letters_map: HashMap<char, i32> = HashMap::new();
     for i in input_array {
@@ -70,25 +70,21 @@ pub fn make_start_count_huffman_with_hash_map(string: &String) -> Box<Huffman> {
 
 /// taking the non valid huffman tree that just has char counts
 /// mutates it into a valid one
-pub fn make_tree(huffman: Box<Huffman>) {
+pub fn make_tree<'a>(huffman: &'a mut Huffman) {
     if huffman.children.len() > 2 {
         huffman.children.sort();
-        let parent = Huffman {
+        let mut parent = Huffman {
             count: 0,
             children: vec![],
             parent: Some(huffman),
         };
-        huffman.children.push(Box::new(HuffNode::Huff(parent)));
-        let parent_box = Box::new(parent);
         let mut smallest = huffman.children.remove(0);
-        smallest.set_parent(parent_box);
         let mut second_smallest = huffman.children.remove(0);
-        second_smallest.set_parent(parent_box);
-        huffman.children.push(Box::new(HuffNode::Huff(Huffman {
-            count: smallest.count() + second_smallest.count(),
-            children: vec![smallest, second_smallest],
-            parent: Some(huffman),
-        })));
+        parent.count = smallest.count() + second_smallest.count();
+        parent.children = vec![smallest, second_smallest];
+        parent.children[0].set_parent(&parent);
+        parent.children[1].set_parent(&parent);
+        huffman.children.push(parent);
         make_tree(huffman)
     }
 }

@@ -3,14 +3,14 @@ use std::fmt;
 #[derive(Debug)]
 pub struct Huffman {
     pub count: i32,
-    pub children: Vec<Box<HuffNode>>,
-    pub parent: Option<Box<Huffman>>,
+    pub children: Vec<HuffNode>,
+    pub parent: Option<&'a Huffman>,
 }
 #[derive(Debug)]
-pub struct CharCount {
+pub struct <'a>CharCount {
     pub count: i32,
     pub character: char,
-    pub parent: Box<Huffman>,
+    pub parent: &'a Huffman,
 }
 
 impl Clone for CharCount {
@@ -63,7 +63,7 @@ impl HuffNode {
         }
     }
 
-    pub fn set_parent(&mut self, parent: Box<Huffman>) {
+    pub fn set_parent<'a>(&'a mut self, parent: &'a Huffman) {
         match self {
             HuffNode::Huff(huffman) => huffman.parent = Some(parent),
             HuffNode::CharCount(charcount) => charcount.parent = parent,
