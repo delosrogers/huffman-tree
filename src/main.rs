@@ -1,13 +1,14 @@
+mod encode;
 mod tree;
 mod types;
-use crate::tree::{make_start_count_huffman, make_start_count_huffman_with_hash_map, make_tree};
-use crate::types::HuffNode;
+use crate::tree::{make_start_count_huffman_with_hash_map, make_tree};
+use crate::types::{HuffNode, Huffman};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use std::string::String;
 use std::time::Instant;
 
-fn pprint_huffman(node: &HuffNode) {
+fn pprint_huffman(tree: Box<Huffman>) {
     fn pprint_huffman(node: &HuffNode, prefix: String, last: bool) {
         let prefix_current = if last { "'- " } else { "|- " };
         println!("{}{}{}", prefix, prefix_current, node);
@@ -23,7 +24,8 @@ fn pprint_huffman(node: &HuffNode) {
             _ => (),
         };
     }
-    pprint_huffman(node, "".to_string(), true);
+
+    pprint_huffman(&HuffNode::Huff(*tree), "".to_string(), true);
 }
 
 fn main() {
@@ -33,20 +35,20 @@ fn main() {
     //     .map(char::from)
     //     .collect();
     let input = std::fs::read_to_string("file.txt").expect("something went wrong");
-    let mut now = Instant::now();
-    // for _i in 0..1000 {
-    let mut huffman = make_start_count_huffman(&input);
-    // println!("{:?}", huffman);
-    let mut _result = make_tree(&mut huffman);
-    // }
-    println!("{:?}", now.elapsed());
-    pprint_huffman(&HuffNode::Huff(huffman));
-    now = Instant::now();
+    // let mut now = Instant::now();
+    // // for _i in 0..1000 {
+    // let mut huffman = make_start_count_huffman(&input);
+    // // println!("{:?}", huffman);
+    // let mut _result = make_tree(&mut huffman);
+    // // }
+    // println!("{:?}", now.elapsed());
+    // pprint_huffman(&HuffNode::Huff(huffman));
+    let now = Instant::now();
     // println!("{:?}", *result);
     // for _i in 0..1000 {
     let mut huffman = make_start_count_huffman_with_hash_map(&input);
-    let mut _result = make_tree(&mut huffman);
+    let mut _result = make_tree(huffman);
     // }
     println!("{:?}", now.elapsed());
-    pprint_huffman(&HuffNode::Huff(huffman));
+    pprint_huffman(huffman);
 }
