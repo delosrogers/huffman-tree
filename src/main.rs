@@ -1,10 +1,13 @@
 #[macro_use]
 extern crate partial_application;
+mod decode;
 mod encode;
 mod tree;
 mod types;
+use crate::decode::decode;
 use crate::tree::{make_start_count_huffman_with_hash_map, make_tree};
 use crate::types::{Arena, Huffman};
+use encode::encode;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use std::string::String;
@@ -23,7 +26,7 @@ fn pprint_huffman(tree: &Huffman, arena: &Arena) {
                     _pprint_huffman(&arena[*child], prefix.to_string(), i == last_child, arena);
                 }
             }
-            _ => (),
+            None => (),
         };
     }
     _pprint_huffman(tree, "".to_string(), false, arena)
@@ -54,4 +57,8 @@ fn main() {
     // }
     println!("{:?}", now.elapsed());
     pprint_huffman(&arena[huffman], &arena);
+    let encoded = encode(&input, &arena[0], &arena);
+    std::fs::write("compressed.txt", &encoded[..]);
+    let decoded = decode(&encoded, &arena[0], &arena);
+    std::fs::write("de-compressed.txt", &decoded[..]);
 }
