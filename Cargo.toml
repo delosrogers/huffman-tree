@@ -1,5 +1,5 @@
 [package]
-name = "huffman_tree"
+name = "mzip"
 version = "0.1.0"
 authors = ["Mattias de los Rios Rogers <delosrogers@gmail.com>"]
 edition = "2018"

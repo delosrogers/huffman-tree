@@ -1,5 +1,5 @@
 use crate::types::{compare_usize_pointers, Arena, Huffman};
-use std::{borrow::Borrow, char, collections::HashMap};
+use std::{char, collections::HashMap};
 
 /// Makes a non valid Huffman tree that contains the counts of every
 /// character
@@ -15,7 +15,7 @@ pub fn make_start_count_huffman_with_hash_map(string: &String) -> (usize, Arena)
     }
     let mut letter_idxs = Vec::new();
     let mut total = 0;
-    let mut huffman = Huffman {
+    let huffman = Huffman {
         count: 0,
         children: None,
         parent: None,

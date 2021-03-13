@@ -1,5 +1,4 @@
 use crate::types::{Arena, Huffman};
-use std::env::current_exe;
 use std::string::String;
 
 pub fn decode(input: &Vec<u8>, tree: &Huffman, arena: &Arena) -> String {
@@ -11,7 +10,7 @@ pub fn decode(input: &Vec<u8>, tree: &Huffman, arena: &Arena) -> String {
             Some(children) => {
                 current_tree_position = &arena[children[bit]];
                 match &current_tree_position.clone().children {
-                    Some(children) => (),
+                    Some(_children) => (),
                     None => {
                         decoded_chars.push(current_tree_position.clone().character.unwrap());
                         current_tree_position = tree;
@@ -23,7 +22,6 @@ pub fn decode(input: &Vec<u8>, tree: &Huffman, arena: &Arena) -> String {
             }
         }
     }
-    println!("{:?}", decoded_chars);
     let mut decoded_string = String::new();
     for ch in decoded_chars {
         decoded_string.push(ch);

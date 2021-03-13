@@ -8,8 +8,7 @@ use crate::decode::decode;
 use crate::tree::{make_start_count_huffman_with_hash_map, make_tree};
 use crate::types::{Arena, Huffman};
 use encode::encode;
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
+use std::io;
 use std::string::String;
 use std::time::Instant;
 
@@ -33,32 +32,38 @@ fn pprint_huffman(tree: &Huffman, arena: &Arena) {
 }
 
 fn main() {
-    // let input = thread_rng()
-    //     .sample_iter(&Alphanumeric)
-    //     .take(1000)
-    //     .map(char::from)
-    //     .collect();
-    let input = std::fs::read_to_string("file.txt").expect("something went wrong");
-    // let mut now = Instant::now();
-    // // for _i in 0..1000 {
-    // let mut huffman = make_start_count_huffman(&input);
-    // // println!("{:?}", huffman);
-    // let mut _result = make_tree(&mut huffman);
-    // // }
-    // println!("{:?}", now.elapsed());
-    // pprint_huffman(&HuffNode::Huff(huffman));
-    let now = Instant::now();
-    // println!("{:?}", *result);
-    // for _i in 0..1000 {
+    println!("enter name of file in ignored directory:");
+    let mut file_name = String::new();
+    io::stdin()
+        .read_line(&mut file_name)
+        .expect("something went wrong reading input");
+    file_name = file_name.replace("\r\n", "");
+    println!("{:?}", file_name);
+    let input = std::fs::read_to_string(&file_name).expect("something went wrong");
+
+    println!("starting code generation");
+    let mut now = Instant::now();
     let mut start_state = make_start_count_huffman_with_hash_map(&input);
-    let mut huffman = start_state.0;
+    let huffman = start_state.0;
     let mut arena: Arena = start_state.1;
     let mut _result = make_tree(huffman, &mut arena);
-    // }
-    println!("{:?}", now.elapsed());
+    let duration = now.elapsed();
     pprint_huffman(&arena[huffman], &arena);
+    println!("code generation took: {:?}", duration);
+
+    println!("starting compression");
+    now = Instant::now();
     let encoded = encode(&input, &arena[0], &arena);
-    std::fs::write("compressed.txt", &encoded[..]);
+    let mut mzip_file_name = file_name.clone();
+    mzip_file_name.push_str(".mzip");
+    println!("compression took: {:?}", now.elapsed());
+    std::fs::write(mzip_file_name, &encoded[..]).expect("problem writing");
+
+    println!("starting decompression");
+    now = Instant::now();
     let decoded = decode(&encoded, &arena[0], &arena);
-    std::fs::write("de-compressed.txt", &decoded[..]);
+    let mut decomp_file_name = file_name.clone();
+    decomp_file_name.push_str(".decomp");
+    println!("decompression took: {:?}", now.elapsed());
+    std::fs::write(decomp_file_name, &decoded[..]).expect("problem writing");
 }

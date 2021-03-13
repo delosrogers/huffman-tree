@@ -9,8 +9,6 @@ pub fn encode(input: &String, tree: &Huffman, arena: &Arena) -> Vec<u8> {
     let mut current_byte: u8 = 0;
     let base: u8 = 2;
     let mut path_for_current = Vec::new();
-    println!("{:?}", arena);
-    println!("{:?}", tree);
     for character in input.chars() {
         path_for_current = get_path_from_char(character, &char_map, arena);
         for i in path_for_current {
