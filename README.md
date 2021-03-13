@@ -1,4 +1,4 @@
-# Huffman Tree
+# Mzip
 A basic implementation of Huffman coding.
 
 
