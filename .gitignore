@@ -2,3 +2,5 @@
 /ignored
 *.mzip
 *.decomp
+.stack-work/
+*~
