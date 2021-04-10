@@ -21,6 +21,11 @@ pub struct ProdHuffman {
     pub character: Option<char>,
 }
 
+pub struct Encoded {
+    pub SplitLocs: Vec<usize>,
+    pub Data: Vec<u8>,
+}
+
 impl fmt::Display for Huffman {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.character {

@@ -1,10 +1,51 @@
-use crate::types::{ProdArena, ProdHuffman};
+use crate::types::{Encoded, ProdArena, ProdHuffman};
 use rayon::prelude::*;
 use std::string::String;
 use std::time::Instant;
 use std::{char, collections::HashMap};
 
-pub fn encode(input: String, tree: &ProdHuffman, arena: &ProdArena) -> Vec<u8> {
+const SEGMENT_LEN: usize = 100000;
+
+pub fn encode(input: String, tree: &ProdHuffman, arena: &ProdArena) -> Encoded {
+    let split_input = split_string(input);
+    let mut split_encoded: Vec<Vec<u8>> = Vec::new();
+    let mut segment_lengths: Vec<usize> = Vec::new();
+    for i in split_input {
+        let encoded_segment = encode_segment(i, tree, arena);
+        segment_lengths.push(encoded_segment.len());
+        split_encoded.push(encoded_segment);
+    }
+    let encoded = Encoded {
+        SplitLocs: segment_lengths,
+        Data: *split_encoded
+            .iter_mut()
+            .reduce(|existing_data: &mut Vec<u8>, new_segment: &mut Vec<u8>| {
+                existing_data.append(new_segment);
+                existing_data
+            })
+            .unwrap(),
+    };
+    encoded
+}
+
+fn split_string(input: String) -> Vec<String> {
+    let mut char_vec: Vec<char> = input.chars().collect();
+    let mut i: usize = SEGMENT_LEN;
+    let mut split_vec = Vec::new();
+    while i < char_vec.len() {
+        split_vec.push(char_vec.split_off(i));
+        i += SEGMENT_LEN;
+    }
+    split_vec.push(char_vec);
+    let res: Vec<String> = split_vec
+        .par_iter()
+        .map(|chars| chars.iter().collect::<String>())
+        .collect();
+    res.reverse();
+    res
+}
+
+fn encode_segment(input: String, tree: &ProdHuffman, arena: &ProdArena) -> Vec<u8> {
     let now = Instant::now();
     let char_map = build_char_map(tree, arena);
     // let mut paths = vec![];
