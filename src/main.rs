@@ -57,7 +57,7 @@ fn main() {
 
     println!("starting compression");
     now = Instant::now();
-    let encoded = encode(&input, &prod_arena[0], &prod_arena);
+    let encoded = encode(input, &prod_arena[0], &prod_arena);
     eprintln!("getting back into main");
     eprintln!("compression took: {:?}", now.elapsed());
     let mut mzip_file_name = file_name.clone();

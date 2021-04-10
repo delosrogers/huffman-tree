@@ -1,11 +1,13 @@
 use crate::types::{ProdArena, ProdHuffman};
 use rayon::prelude::*;
+use std::fs::File;
+use std::io::{BufRead, BufReader, Read};
 use std::string::String;
 use std::sync::{Arc, RwLock};
 use std::time::Instant;
 use std::{char, collections::HashMap};
 
-pub fn encode(input: &String, tree: &ProdHuffman, arena: &ProdArena) -> Vec<u8> {
+pub fn encode(input: String, tree: &ProdHuffman, arena: &ProdArena) -> Vec<u8> {
     let now = Instant::now();
     let char_map = build_char_map(tree, arena);
     // let mut paths = vec![];
