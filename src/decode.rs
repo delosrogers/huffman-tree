@@ -6,7 +6,7 @@ use std::time::Instant;
 pub fn decode(input: &Vec<u8>, tree: &ProdHuffman, arena: &ProdArena) -> String {
     // let bits = make_bit_list(input);
     let mut current_tree_position = tree;
-    let mut decoded_chars = Vec::new();
+    let mut decoded_string = String::new();
     for b in input {
         let mut byte = *b;
         for _i in 0..8 {
@@ -16,7 +16,7 @@ pub fn decode(input: &Vec<u8>, tree: &ProdHuffman, arena: &ProdArena) -> String 
                 Some(children) => {
                     current_tree_position = &arena[children[bit as usize]];
                     if current_tree_position.children.is_none() {
-                        decoded_chars.push(*current_tree_position.character.as_ref().unwrap());
+                        decoded_string.push(*current_tree_position.character.as_ref().unwrap());
                         current_tree_position = tree;
                     }
                 }
@@ -25,10 +25,6 @@ pub fn decode(input: &Vec<u8>, tree: &ProdHuffman, arena: &ProdArena) -> String 
                 }
             }
         }
-    }
-    let mut decoded_string = String::new();
-    for ch in decoded_chars {
-        decoded_string.push(ch);
     }
     decoded_string
 }
