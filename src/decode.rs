@@ -1,7 +1,5 @@
 use crate::types::{ProdArena, ProdHuffman};
-use rayon::prelude::*;
 use std::string::String;
-use std::time::Instant;
 
 pub fn decode(input: &Vec<u8>, tree: &ProdHuffman, arena: &ProdArena) -> String {
     // let bits = make_bit_list(input);

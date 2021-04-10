@@ -46,7 +46,7 @@ pub fn encode(input: String, tree: &ProdHuffman, arena: &ProdArena) -> Vec<u8> {
             current_byte = 0;
         }
 
-        current_byte += i * base.pow(current_bit as u32);
+        current_byte += i * (base << current_bit);
         current_bit += 1;
     }
     output_bytes.push(current_byte);
@@ -62,7 +62,7 @@ fn get_path_from_char(
     arena: &ProdArena,
 ) -> Vec<u8> {
     let idx = *char_map.get(&character).unwrap();
-    let mut path = Vec::new();
+    let mut path = Vec::with_capacity(10);
     path = go_up_tree(idx, arena, path);
     path.reverse();
     path
@@ -79,9 +79,10 @@ fn go_up_tree(curr_node: usize, arena: &ProdArena, mut path: Vec<u8>) -> Vec<u8>
         }
     }
     path.push(first_or_second_child);
-    match parent.parent {
-        Some(_) => go_up_tree(leaf.parent.unwrap(), arena, path),
-        None => path,
+    if parent.parent.is_some() {
+        go_up_tree(leaf.parent.unwrap(), arena, path)
+    } else {
+        path
     }
 }
 

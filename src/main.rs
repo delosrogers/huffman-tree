@@ -6,8 +6,7 @@ mod tree;
 mod types;
 use crate::decode::decode;
 use crate::tree::{make_start_count_huffman_with_hash_map, make_tree};
-use crate::types::{into_prod, Arena, Huffman, ProdArena, ProdHuffman};
-use dhat::{Dhat, DhatAlloc};
+use crate::types::{into_prod, Arena, Huffman, ProdArena};
 use encode::encode;
 use serde_json;
 use std::env;
@@ -39,18 +38,18 @@ fn pprint_huffman(tree: &Huffman, arena: &Arena) {
 fn main() {
     // let _dhat = Dhat::start_heap_profiling;
     println!("enter name of file:");
-    let mut args: Vec<String> = env::args().collect();
-    let mut file_name = &args[1];
+    let args: Vec<String> = env::args().collect();
+    let file_name = &args[1];
     println!("file name: {:?}", file_name);
     let input = std::fs::read_to_string(&file_name).expect("something went wrong");
 
     println!("starting code generation");
     let mut now = Instant::now();
-    let mut start_state = make_start_count_huffman_with_hash_map(&input);
+    let start_state = make_start_count_huffman_with_hash_map(&input);
     let huffman = start_state.0;
     let mut arena: Arena = start_state.1;
     let mut _result = make_tree(huffman, &mut arena);
-    let mut prod_arena = into_prod(&arena);
+    let prod_arena = into_prod(&arena);
     let duration = now.elapsed();
     pprint_huffman(&arena[huffman], &arena);
     println!("code generation took: {:?}", duration);
@@ -70,7 +69,8 @@ fn main() {
         &serde_json::to_string(&prod_arena)
             .expect("serialization error")
             .as_str(),
-    );
+    )
+    .expect("problem writing tree");
 
     println!("starting decompression");
     let tree_str = std::fs::read_to_string(&tree_fname).expect("problem reading tree");

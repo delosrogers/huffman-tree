@@ -1,7 +1,4 @@
 use crate::types::{compare_usize_pointers, Arena, Huffman};
-use rayon::prelude::*;
-use std::sync::atomic::{AtomicI32, Ordering};
-use std::sync::{Arc, RwLock};
 use std::{char, collections::HashMap};
 
 /// Makes a non valid Huffman tree that contains the counts of every
