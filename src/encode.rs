@@ -1,9 +1,6 @@
 use crate::types::{ProdArena, ProdHuffman};
 use rayon::prelude::*;
-use std::fs::File;
-use std::io::{BufRead, BufReader, Read};
 use std::string::String;
-use std::sync::{Arc, RwLock};
 use std::time::Instant;
 use std::{char, collections::HashMap};
 
@@ -11,15 +8,30 @@ pub fn encode(input: String, tree: &ProdHuffman, arena: &ProdArena) -> Vec<u8> {
     let now = Instant::now();
     let char_map = build_char_map(tree, arena);
     // let mut paths = vec![];
-    let mut paths: Vec<Vec<u8>> = Vec::from(&input[..])
-        .into_par_iter()
-        .map(|character| get_path_from_char(char::from(character), &char_map, &arena))
-        .collect();
+    let directions: Vec<u8> = input
+        .chars()
+        .collect::<Vec<char>>()
+        .par_iter_mut()
+        .map(|character| get_path_from_char(*character, &char_map, &arena))
+        .fold(
+            || Vec::new(),
+            |mut directions, mut path| {
+                directions.append(&mut path);
+                directions
+            },
+        )
+        .reduce(
+            || Vec::new(),
+            |mut directions, mut sub_dirs| {
+                directions.append(&mut sub_dirs);
+                directions
+            },
+        );
 
-    let mut directions = Vec::new();
-    for i in paths.iter_mut() {
-        directions.append(i);
-    }
+    // let mut directions = Vec::new();
+    // for i in paths.iter_mut() {
+    //     directions.append(i);
+    // }
 
     println!("time to build paths {:?}", now.elapsed());
     let now = Instant::now();
