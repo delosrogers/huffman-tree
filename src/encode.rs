@@ -55,22 +55,20 @@ fn get_path_from_char(
     path
 }
 
-fn go_up_tree(mut curr_node: usize, arena: &ProdArena, mut path: Vec<u8>) -> Vec<u8> {
-    let mut leaf = &arena[curr_node];
-    let mut parent = &arena[leaf.parent.unwrap()];
-    let mut children = parent.children.as_ref().unwrap();
-    while parent.parent.is_some() {
-        let mut first_or_second_child = 0;
-        if children[1] == curr_node {
-            first_or_second_child = 1 as u8
-        }
-        path.push(first_or_second_child);
-        curr_node = leaf.parent.unwrap();
-        leaf = &arena[curr_node];
-        parent = &arena[leaf.parent.unwrap()];
-        children = parent.children.as_ref().unwrap();
+fn go_up_tree(curr_node: usize, arena: &ProdArena, mut path: Vec<u8>) -> Vec<u8> {
+    let leaf = &arena[curr_node];
+    let parent = &arena[leaf.parent.unwrap()];
+    let children = parent.children.as_ref().unwrap();
+    let mut first_or_second_child = 0;
+    if children[1] == curr_node {
+        first_or_second_child = 1 as u8
     }
-    path
+    path.push(first_or_second_child);
+    if parent.parent.is_some() {
+        go_up_tree(leaf.parent.unwrap(), arena, path)
+    } else {
+        path
+    }
 }
 
 fn build_char_map(tree: &ProdHuffman, arena: &ProdArena) -> HashMap<char, usize> {
