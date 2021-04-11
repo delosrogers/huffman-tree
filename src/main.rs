@@ -15,9 +15,6 @@ use std::time::Instant;
 use structopt::StructOpt;
 use types::ProdHuffman;
 
-// #[global_allocator]
-// static ALLOCATOR: DhatAlloc = DhatAlloc;
-
 fn pprint_huffman(tree: &ProdHuffman, arena: &ProdArena) {
     fn _pprint_huffman(node: &ProdHuffman, prefix: String, last: bool, arena: &ProdArena) {
         let prefix_current = if last { "'- " } else { "|- " };

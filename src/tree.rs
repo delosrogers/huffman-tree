@@ -1,8 +1,8 @@
 use crate::types::{compare_usize_pointers, Arena, Huffman};
 use std::{char, collections::HashMap};
 
-/// Makes a non valid Huffman tree that contains the counts of every
-/// character
+/// Makes a flat Huffman tree that contains the counts of every
+/// character but needs to structred by count
 pub fn make_start_count_huffman_with_hash_map(string: &String) -> (usize, Arena) {
     let input_array: Vec<char> = string.chars().collect();
     let mut arena: Arena = Vec::new();

@@ -28,11 +28,6 @@ pub fn encode(input: String, tree: &ProdHuffman, arena: &ProdArena) -> Vec<u8> {
             },
         );
 
-    // let mut directions = Vec::new();
-    // for i in paths.iter_mut() {
-    //     directions.append(i);
-    // }
-
     println!("time to build paths {:?}", now.elapsed());
     let now = Instant::now();
     let mut output_bytes: Vec<u8> = Vec::new();
