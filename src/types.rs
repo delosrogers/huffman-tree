@@ -2,6 +2,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
 use std::fmt;
+use structopt::StructOpt;
 
 pub type Arena = Vec<Huffman>;
 #[derive(Debug, Clone)]
@@ -21,11 +22,30 @@ pub struct ProdHuffman {
     pub character: Option<char>,
 }
 
+#[derive(StructOpt)]
+#[structopt(rename_all = "kebab-case")]
+pub struct Cli {
+    /// pass 1 to decompress using the base name you pass in
+    #[structopt(short = "d", long = "decompress", default_value = "0")]
+    pub decompress_option: String,
+
+    pub file_name: String,
+}
+
 impl fmt::Display for Huffman {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.character {
             Some(character) => write!(f, "{}: {}", character, self.count),
             None => write!(f, "{}", self.count),
+        }
+    }
+}
+
+impl fmt::Display for ProdHuffman {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.character {
+            Some(character) => write!(f, "{}:", character),
+            None => write!(f, " "),
         }
     }
 }
