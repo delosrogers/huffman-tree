@@ -1,11 +1,28 @@
-use crate::types::{ProdArena, ProdHuffman};
+use crate::types::{Encoded, ProdArena, ProdHuffman};
+use rayon::prelude::*;
 use std::string::String;
 
-pub fn decode(input: &Vec<u8>, tree: &ProdHuffman, arena: &ProdArena) -> String {
+pub fn decode(input: Encoded, tree: &ProdHuffman, arena: &ProdArena) -> String {
     // let bits = make_bit_list(input);
-    let mut current_tree_position = tree;
+    let mut split_encoded_bytes = split_bytes(input.data, input.split_locs);
+    let decoded_string = split_encoded_bytes
+        .par_iter_mut()
+        .map(|segment| decode_segment(segment.to_vec(), tree, arena))
+        .reduce(
+            || String::new(),
+            |mut prev_segment: String, new_segment: String| {
+                let mut_prev_segment = &mut prev_segment;
+                mut_prev_segment.push_str(&new_segment[..]);
+                prev_segment
+            },
+        );
+    decoded_string
+}
+
+fn decode_segment(mut input: Vec<u8>, tree: &ProdHuffman, arena: &ProdArena) -> String {
     let mut decoded_string = String::new();
-    for b in input {
+    let mut current_tree_position = tree;
+    for b in input.iter_mut() {
         let mut byte = *b;
         for _i in 0..8 {
             let bit = byte % 2;
@@ -25,6 +42,17 @@ pub fn decode(input: &Vec<u8>, tree: &ProdHuffman, arena: &ProdArena) -> String 
         }
     }
     decoded_string
+}
+
+fn split_bytes(mut bytes: Vec<u8>, mut splits: Vec<usize>) -> Vec<Vec<u8>> {
+    let mut res: Vec<Vec<u8>> = Vec::new();
+    let mut new_bytes = Vec::new();
+    for split in splits.iter_mut() {
+        new_bytes = bytes.split_off(*split);
+        res.push(bytes);
+        bytes = new_bytes;
+    }
+    res
 }
 
 // fn make_bit_list(bytes: &Vec<u8>) -> Vec<u8> {

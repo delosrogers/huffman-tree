@@ -10,20 +10,15 @@ pub fn encode(input: String, tree: &ProdHuffman, arena: &ProdArena) -> Encoded {
     let split_input = split_string(input);
     let mut split_encoded: Vec<Vec<u8>> = Vec::new();
     let mut segment_lengths: Vec<usize> = Vec::new();
+    let mut data: Vec<u8> = Vec::new();
     for i in split_input {
-        let encoded_segment = encode_segment(i, tree, arena);
+        let mut encoded_segment = encode_segment(i, tree, arena);
         segment_lengths.push(encoded_segment.len());
-        split_encoded.push(encoded_segment);
+        data.append(&mut encoded_segment);
     }
     let encoded = Encoded {
-        SplitLocs: segment_lengths,
-        Data: *split_encoded
-            .iter_mut()
-            .reduce(|existing_data: &mut Vec<u8>, new_segment: &mut Vec<u8>| {
-                existing_data.append(new_segment);
-                existing_data
-            })
-            .unwrap(),
+        split_locs: segment_lengths,
+        data: data,
     };
     encoded
 }
@@ -33,7 +28,11 @@ fn split_string(input: String) -> Vec<String> {
     let mut i: usize = SEGMENT_LEN;
     let mut split_vec = Vec::new();
     while i < char_vec.len() {
-        split_vec.push(char_vec.split_off(i));
+        let new_char_vec = char_vec.split_off(i);
+        // split off returns the end so we push the beginning of the
+        // char vec onto the split vec
+        split_vec.push(char_vec);
+        char_vec = new_char_vec;
         i += SEGMENT_LEN;
     }
     split_vec.push(char_vec);
@@ -41,7 +40,6 @@ fn split_string(input: String) -> Vec<String> {
         .par_iter()
         .map(|chars| chars.iter().collect::<String>())
         .collect();
-    res.reverse();
     res
 }
 

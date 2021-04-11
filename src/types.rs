@@ -22,8 +22,8 @@ pub struct ProdHuffman {
 }
 
 pub struct Encoded {
-    pub SplitLocs: Vec<usize>,
-    pub Data: Vec<u8>,
+    pub split_locs: Vec<usize>,
+    pub data: Vec<u8>,
 }
 
 impl fmt::Display for Huffman {

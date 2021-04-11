@@ -6,7 +6,7 @@ mod tree;
 mod types;
 use crate::decode::decode;
 use crate::tree::{make_start_count_huffman_with_hash_map, make_tree};
-use crate::types::{into_prod, Arena, Huffman, ProdArena};
+use crate::types::{into_prod, Arena, Encoded, Huffman, ProdArena};
 use encode::encode;
 use serde_json;
 use std::env;
@@ -57,13 +57,23 @@ fn main() {
     println!("starting compression");
     now = Instant::now();
     let encoded = encode(input, &prod_arena[0], &prod_arena);
+    let encoded_data = encoded.data;
     eprintln!("getting back into main");
     eprintln!("compression took: {:?}", now.elapsed());
     let mut mzip_file_name = file_name.clone();
     mzip_file_name.push_str(".mzip");
     let mut tree_fname = file_name.clone();
     tree_fname.push_str(".tree");
-    std::fs::write(&mzip_file_name, &encoded[..]).expect("problem writing");
+    let mut split_fname = file_name.clone();
+    split_fname.push_str(".splits");
+    std::fs::write(&mzip_file_name, &encoded_data[..]).expect("problem writing");
+    std::fs::write(
+        &split_fname,
+        &serde_json::to_string(&encoded.split_locs)
+            .expect("serialization error")
+            .as_str(),
+    )
+    .expect("error writing splits");
     std::fs::write(
         &tree_fname,
         &serde_json::to_string(&prod_arena)
@@ -74,10 +84,17 @@ fn main() {
 
     println!("starting decompression");
     let tree_str = std::fs::read_to_string(&tree_fname).expect("problem reading tree");
-    let tree: ProdArena = serde_json::from_str(&tree_str).unwrap();
+    let tree: ProdArena = serde_json::from_str(&tree_str).expect("problem deserializing");
     let compressed = std::fs::read(&mzip_file_name).expect("problem reading mzip");
+    let split_locs_str = std::fs::read_to_string(&split_fname).expect("problem reading splits");
+    let split_locs: Vec<usize> =
+        serde_json::from_str(&split_locs_str).expect("problem deserializing");
+    let to_decompress = Encoded {
+        data: compressed,
+        split_locs: split_locs,
+    };
     now = Instant::now();
-    let decoded = decode(&compressed, &tree[0], &tree);
+    let decoded = decode(to_decompress, &tree[0], &tree);
     let mut decomp_file_name = file_name.clone();
     decomp_file_name.push_str(".decomp");
     println!("decompression took: {:?}", now.elapsed());
