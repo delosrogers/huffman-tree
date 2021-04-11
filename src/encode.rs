@@ -13,13 +13,6 @@ pub fn encode(input: String, tree: &ProdHuffman, arena: &ProdArena) -> Vec<u8> {
         .collect::<Vec<char>>()
         .par_iter_mut()
         .map(|character| get_path_from_char(*character, &char_map, &arena))
-        .fold(
-            || Vec::new(),
-            |mut directions, mut path| {
-                directions.append(&mut path);
-                directions
-            },
-        )
         .reduce(
             || Vec::new(),
             |mut directions, mut sub_dirs| {
