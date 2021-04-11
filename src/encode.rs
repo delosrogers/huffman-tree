@@ -38,7 +38,6 @@ pub fn encode(input: String, tree: &ProdHuffman, arena: &ProdArena) -> Vec<u8> {
     let mut output_bytes: Vec<u8> = Vec::new();
     let mut current_bit: u8 = 0;
     let mut current_byte: u8 = 0;
-    let base: u8 = 2;
     for i in directions {
         if current_bit > 7 {
             current_bit = 0;
@@ -46,7 +45,7 @@ pub fn encode(input: String, tree: &ProdHuffman, arena: &ProdArena) -> Vec<u8> {
             current_byte = 0;
         }
 
-        current_byte += i * (base << current_bit);
+        current_byte += i * ((1 as u8) << current_bit);
         current_bit += 1;
     }
     output_bytes.push(current_byte);
@@ -106,50 +105,43 @@ fn build_char_map(tree: &ProdHuffman, arena: &ProdArena) -> HashMap<char, usize>
 #[test]
 fn test_encode() {
     let arena = vec![
-        Huffman {
-            count: 5,
-            children: Some(vec![5, 6]),
+        ProdHuffman {
+            children: Some([5, 6]),
             parent: None,
             character: None,
         },
-        Huffman {
-            count: 1,
+        ProdHuffman {
             children: None,
             parent: Some(5),
             character: Some('h'),
         },
-        Huffman {
-            count: 2,
+        ProdHuffman {
             children: None,
             parent: Some(6),
             character: Some('l'),
         },
-        Huffman {
-            count: 1,
+        ProdHuffman {
             children: None,
             parent: Some(5),
             character: Some('e'),
         },
-        Huffman {
-            count: 1,
+        ProdHuffman {
             children: None,
             parent: Some(6),
             character: Some('o'),
         },
-        Huffman {
-            count: 2,
-            children: Some(vec![1, 3]),
+        ProdHuffman {
+            children: Some([1, 3]),
             parent: Some(0),
             character: None,
         },
-        Huffman {
-            count: 3,
-            children: Some(vec![4, 2]),
+        ProdHuffman {
+            children: Some([4, 2]),
             parent: Some(0),
             character: None,
         },
     ];
 
-    let res = encode(&"hello".to_string(), &arena[0], &arena);
+    let res = encode("hello".to_string(), &arena[0], &arena);
     assert_eq!(res, vec![248 as u8, 1 as u8]);
 }

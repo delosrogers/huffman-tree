@@ -6,10 +6,9 @@ mod tree;
 mod types;
 use crate::decode::decode;
 use crate::tree::{make_start_count_huffman_with_hash_map, make_tree};
-use crate::types::{into_prod, Arena, Cli, Huffman, ProdArena};
+use crate::types::{into_prod, Arena, Cli, ProdArena};
 use encode::encode;
 use serde_json;
-use std::env;
 use std::io;
 use std::string::String;
 use std::time::Instant;
@@ -53,14 +52,9 @@ fn main() {
 
 fn decompression_step(file_name: &String) -> io::Result<()> {
     let now = Instant::now();
-    let mut tree: ProdArena = Vec::new();
-    let mut compressed = vec![];
-    match read_compressed_files(file_name)? {
-        (tr, cmp) => {
-            tree = tr;
-            compressed = cmp;
-        }
-    }
+    let tree_and_data = read_compressed_files(file_name)?;
+    let tree: ProdArena = tree_and_data.0;
+    let compressed = tree_and_data.1;
     let decoded = decode(&compressed, &tree[0], &tree);
     let mut decomp_file_name = file_name.clone();
     decomp_file_name.push_str(".decomp");
