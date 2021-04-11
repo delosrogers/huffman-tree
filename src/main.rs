@@ -40,6 +40,7 @@ fn pprint_huffman(tree: &ProdHuffman, arena: &ProdArena) {
 
 fn main() {
     let cli = Cli::from_args();
+    eprint!("{:?}", cli);
     let file_name = &cli.file_name;
     eprintln!("file name: {:?}", file_name);
     if cli.decompress_option == "1" {
@@ -84,7 +85,7 @@ fn compression_step(file_name: &String) -> std::io::Result<()> {
     // parent node is always the first one in the arena
     println!("starting code generation");
     let mut now = Instant::now();
-    let mut prod_arena: ProdArena = generate_tree(&input);
+    let prod_arena: ProdArena = generate_tree(&input);
     let duration = now.elapsed();
     pprint_huffman(&prod_arena[0], &prod_arena);
     println!("code generation took: {:?}", duration);

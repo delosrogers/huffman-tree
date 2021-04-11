@@ -22,7 +22,7 @@ pub struct ProdHuffman {
     pub character: Option<char>,
 }
 
-#[derive(StructOpt)]
+#[derive(StructOpt, Debug)]
 #[structopt(rename_all = "kebab-case")]
 pub struct Cli {
     /// pass 1 to decompress using the base name you pass in
