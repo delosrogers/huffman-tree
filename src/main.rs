@@ -1,3 +1,7 @@
+#![feature(test)]
+
+extern crate test;
+
 #[macro_use]
 extern crate partial_application;
 mod decode;
@@ -51,23 +55,27 @@ fn decompression_step(file_name: &String) -> io::Result<()> {
     let now = Instant::now();
     let tree_and_data = read_compressed_files(file_name)?;
     let tree: ProdArena = tree_and_data.0;
-    let compressed = tree_and_data.1;
-    let decoded = decode(&compressed, &tree[0], &tree);
+    let mut compressed = tree_and_data.1;
     let mut decomp_file_name = file_name.clone();
     decomp_file_name.push_str(".decomp");
+    match std::fs::remove_file(&decomp_file_name[..]) {
+        Err(_) => (),
+        _ => (),
+    }
+    let mut out_file = std::fs::OpenOptions::new().append(true).create(true).open(&decomp_file_name[..])?;
+    decode(&mut compressed, &tree[0], &tree, &mut out_file)?;
     println!("decompression took: {:?}", now.elapsed());
-    std::fs::write(decomp_file_name, &decoded[..])?;
     Ok(())
 }
 
-fn read_compressed_files(file_name: &String) -> io::Result<(ProdArena, Vec<u8>)> {
+fn read_compressed_files(file_name: &String) -> io::Result<(ProdArena, std::fs::File)> {
     let mut mzip_file_name = file_name.clone();
     mzip_file_name.push_str(".mzip");
     let mut tree_fname = file_name.clone();
     tree_fname.push_str(".tree");
     let tree_str = std::fs::read_to_string(&tree_fname)?;
     let tree: ProdArena = serde_json::from_str(&tree_str).unwrap();
-    let compressed = std::fs::read(&mzip_file_name)?;
+    let compressed = std::fs::OpenOptions::new().read(true).open(&mzip_file_name)?;
     Ok((tree, compressed))
 }
 
@@ -115,4 +123,18 @@ fn write_compressed_to_disk(
     std::fs::write(&mzip_file_name, &compressed[..])?;
     std::fs::write(&tree_fname, &serde_json::to_string(&arena)?.as_str())?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use test::{Bencher, black_box};
+    use super::*;
+
+    #[bench]
+    fn bench_decompress(b: &mut Bencher) {
+        let fname = String::from("file.txt");
+        b.iter(|| {
+            black_box(decompression_step(&fname));
+        })
+    }
 }

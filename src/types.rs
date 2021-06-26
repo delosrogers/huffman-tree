@@ -71,3 +71,14 @@ impl Huffman {
 pub fn into_prod(arena: &Arena) -> ProdArena {
     arena.into_par_iter().map(|huff| huff.into_prod()).collect()
 }
+
+#[derive(Debug)]
+pub struct MzipError {}
+
+impl fmt::Display for MzipError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "mzip error")
+    }
+}
+
+impl std::error::Error for MzipError{}
