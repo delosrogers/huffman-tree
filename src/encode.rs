@@ -2,45 +2,58 @@ use crate::types::{ProdArena, ProdHuffman};
 use rayon::prelude::*;
 use std::string::String;
 use std::time::Instant;
-use std::{char, collections::HashMap};
+use std::{char, collections::HashMap, io::{Read, Write}};
 
-pub fn encode(input: String, tree: &ProdHuffman, arena: &ProdArena) -> Vec<u8> {
+const BUF_SIZE: usize = 65536;
+
+struct InPogressByte {
+    curr_byte: u8,
+    curr_bit: u8,
+}
+
+
+pub fn encode<T: Read, O: Write>(input_file: &mut T, tree: &ProdHuffman, arena: &ProdArena, out_file: &mut O) -> std::io::Result<()> {
     let now = Instant::now();
     let char_map = build_char_map(tree, arena);
-    // let mut paths = vec![];
-    let directions: Vec<u8> = input
-        .chars()
-        .collect::<Vec<char>>()
-        .par_iter_mut()
-        .map(|character| get_path_from_char(*character, &char_map, &arena))
-        .reduce(
-            || Vec::new(),
-            |mut directions, mut sub_dirs| {
-                directions.append(&mut sub_dirs);
-                directions
-            },
-        );
+    let mut buf: Box<[u8]> = Box::new([0; BUF_SIZE]);
+    let mut bytes_read = BUF_SIZE;
+    let mut in_progress_byte = InPogressByte {curr_bit: 0, curr_byte: 0};
+    while bytes_read == BUF_SIZE {
+        bytes_read = input_file.by_ref().take(BUF_SIZE as u64).read(buf.as_mut())?;
+        // let mut paths = vec![];
+        let directions: Vec<u8> = std::str::from_utf8(&buf[0..bytes_read]).unwrap()
+            .chars()
+            .collect::<Vec<char>>()
+            .par_iter_mut()
+            .map(|character| get_path_from_char(*character, &char_map, &arena))
+            .reduce(
+                || Vec::new(),
+                |mut directions, mut sub_dirs| {
+                    directions.append(&mut sub_dirs);
+                    directions
+                },
+            );
+        let mut output_bytes: Vec<u8> = Vec::new();
+        let mut current_bit: u8 = in_progress_byte.curr_bit;
+        let mut current_byte: u8 = in_progress_byte.curr_byte;
+        for i in directions {
+            if current_bit > 7 {
+                current_bit = 0;
+                output_bytes.push(current_byte);
+                current_byte = 0;
+            }
 
-    println!("time to build paths {:?}", now.elapsed());
-    let now = Instant::now();
-    let mut output_bytes: Vec<u8> = Vec::new();
-    let mut current_bit: u8 = 0;
-    let mut current_byte: u8 = 0;
-    for i in directions {
-        if current_bit > 7 {
-            current_bit = 0;
-            output_bytes.push(current_byte);
-            current_byte = 0;
+            current_byte += i << current_bit;
+            current_bit += 1;
         }
 
-        current_byte += i << current_bit;
-        current_bit += 1;
+        in_progress_byte.curr_byte = current_byte;
+        in_progress_byte.curr_bit = current_bit;
+        out_file.write(output_bytes.as_slice())?;
     }
-    output_bytes.push(current_byte);
-    println!("time to make byte vector {:?}", now.elapsed());
-    output_bytes.shrink_to_fit();
-    println!("exiting encodev");
-    output_bytes
+    out_file.write(&[in_progress_byte.curr_byte])?;
+    println!("time to compress {:?}", now.elapsed());
+    Ok(())
 }
 
 fn get_path_from_char(

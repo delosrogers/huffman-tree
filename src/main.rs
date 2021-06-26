@@ -91,9 +91,14 @@ fn compression_step(file_name: &String) -> std::io::Result<()> {
 
     println!("starting compression");
     now = Instant::now();
-    let compressed = compress(input, &prod_arena);
+    let mut input_file = std::fs::OpenOptions::new().read(true).open(&file_name)?;
+    let mut mzip_file_name = file_name.clone();
+    mzip_file_name.push_str(".mzip");
+    std::fs::remove_file(&mzip_file_name);
+    let mut output_file = std::fs::OpenOptions::new().create(true).append(true).open(&mzip_file_name)?;
+    compress(&mut input_file, &prod_arena, &mut output_file)?;
     eprintln!("compression took: {:?}", now.elapsed());
-    write_compressed_to_disk(&compressed, &prod_arena, &file_name)?;
+    write_compressed_to_disk(&prod_arena, &file_name)?;
     Ok(())
 }
 
@@ -106,21 +111,17 @@ fn generate_tree(input: &String) -> ProdArena {
     prod_arena
 }
 
-fn compress(input: String, arena: &ProdArena) -> Vec<u8> {
-    let encoded = encode(input, &arena[0], &arena);
+fn compress(input: &mut std::fs::File, arena: &ProdArena, output: &mut std::fs::File) -> std::io::Result<()> {
+    let encoded = encode(input, &arena[0], &arena, output);
     encoded
 }
 
 fn write_compressed_to_disk(
-    compressed: &Vec<u8>,
     arena: &ProdArena,
     file_name: &String,
 ) -> std::io::Result<()> {
-    let mut mzip_file_name = file_name.clone();
-    mzip_file_name.push_str(".mzip");
     let mut tree_fname = file_name.clone();
     tree_fname.push_str(".tree");
-    std::fs::write(&mzip_file_name, &compressed[..])?;
     std::fs::write(&tree_fname, &serde_json::to_string(&arena)?.as_str())?;
     Ok(())
 }
