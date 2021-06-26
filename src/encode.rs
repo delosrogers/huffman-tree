@@ -3,8 +3,8 @@ use rayon::prelude::*;
 use std::string::String;
 use std::time::Instant;
 use std::{char, collections::HashMap, io::{Read, Write}};
+use super::BUF_SIZE;
 
-const BUF_SIZE: usize = 65536;
 
 struct InPogressByte {
     curr_byte: u8,

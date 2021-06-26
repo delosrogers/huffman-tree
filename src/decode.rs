@@ -1,8 +1,8 @@
 use crate::types::{ProdArena, ProdHuffman};
 use std::string::String;
 use std::{io, io::{Write, Read}};
+use super::BUF_SIZE;
 
-const BUF_SIZE: usize = 65536;
 /// out_file must be opened in append mode
 pub fn decode<T,O>(in_file: &mut T, tree: &ProdHuffman, arena: &ProdArena, out_file: &mut O) -> io::Result<()> where
     T: io::Read,

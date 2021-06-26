@@ -19,6 +19,8 @@ use std::time::Instant;
 use structopt::StructOpt;
 use types::ProdHuffman;
 
+const BUF_SIZE: usize = 65536;
+
 fn pprint_huffman(tree: &ProdHuffman, arena: &ProdArena) {
     fn _pprint_huffman(node: &ProdHuffman, prefix: String, last: bool, arena: &ProdArena) {
         let prefix_current = if last { "'- " } else { "|- " };
@@ -80,11 +82,11 @@ fn read_compressed_files(file_name: &String) -> io::Result<(ProdArena, std::fs::
 }
 
 fn compression_step(file_name: &String) -> std::io::Result<()> {
-    let input = std::fs::read_to_string(&file_name)?;
     // parent node is always the first one in the arena
     println!("starting code generation");
     let mut now = Instant::now();
-    let prod_arena: ProdArena = generate_tree(&input);
+    let mut in_file = std::fs::File::open(file_name)?;
+    let prod_arena: ProdArena = generate_tree(&mut in_file)?;
     let duration = now.elapsed();
     pprint_huffman(&prod_arena[0], &prod_arena);
     println!("code generation took: {:?}", duration);
@@ -102,13 +104,13 @@ fn compression_step(file_name: &String) -> std::io::Result<()> {
     Ok(())
 }
 
-fn generate_tree(input: &String) -> ProdArena {
-    let start_state = make_start_count_huffman_with_hash_map(&input);
+fn generate_tree(in_file: &mut std::fs::File) -> std::io::Result<ProdArena> {
+    let start_state = make_start_count_huffman_with_hash_map(in_file)?;
     let huffman = start_state.0;
     let mut arena: Arena = start_state.1;
     let mut _result = make_tree(huffman, &mut arena);
     let prod_arena = into_prod(&arena);
-    prod_arena
+    Ok(prod_arena)
 }
 
 fn compress(input: &mut std::fs::File, arena: &ProdArena, output: &mut std::fs::File) -> std::io::Result<()> {
